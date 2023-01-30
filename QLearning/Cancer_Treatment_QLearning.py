@@ -13,7 +13,8 @@ def model_update(states, drug_infusion):
     s = 0.33
     alpha = 0.3
     rho = 0.01
-    for n in range(1,int(1+1//dt)):
+    N=int(1//dt)
+    for n in range(0,N):
         pre_normal, pre_tumor, pre_immune, pre_drug_con = normal, tumor, immune, drug_con
         normal+=(parameters_r[1]*pre_normal*(1-parameters_b[1]*pre_normal)-parameters_c[3]*pre_normal*pre_tumor-parameters_a[2]*pre_normal*pre_drug_con)*dt
         tumor+=(parameters_r[0]*pre_tumor*(1-parameters_b[0]*pre_tumor)-parameters_c[1]*pre_immune*pre_tumor-parameters_c[2]*pre_tumor*pre_normal-parameters_a[1]*pre_tumor*pre_drug_con)*dt
@@ -64,7 +65,6 @@ for i in range(20000):
         next_state = state_update(model[1])
         r = reward(tumor_counts[-1], model[1])
         tumor_counts.append(model[1])
-
         if next_state==0:
             done=True
 
