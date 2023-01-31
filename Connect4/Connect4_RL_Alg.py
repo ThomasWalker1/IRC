@@ -5,6 +5,13 @@ import matplotlib.pyplot as plt
 def game_reset():
     return np.zeros(shape=(7,6), dtype=int)
 
+def game_drawn(board):
+    for i in range(7):
+        for j in range(6):
+            if board[i][j]==0:
+                return False
+    return True
+
 def game_forfeit(board, col):
     if not isinstance(col, Number) or (col>6 or col<0): 
         return True
@@ -83,12 +90,20 @@ while game_won(board)==0:
     else:
         board = game_update(board, column, player)
 
+def game_ending(board):
+    if game_drawn(board):
+        return 0
+    else:
+        return game_won(board)
+
 def game_play():
-    states = []
+    states_observed = []
+    actions = []
     board = game_reset()
     player=2
     while game_won(board)==0:
-        states.append(game_state(board))
+        if player==2:
+            states_observed.append(game_state(board))
         if player==1:
             player=2
         else:
@@ -97,10 +112,40 @@ def game_play():
         if game_forfeit(board,action):
             break
         board = game_update(board, action, player)
-    return(board, states)
+        if player==1:
+            actions.append(action)
+    if len(states_observed)>len(actions):
+        states_observed=states_observed[0:-1]
+    return(board, states_observed, actions, game_ending(board))
 
-states_visited=[]
-for i in range(1000):
-    states_visited+=game_play()[1]
-plt.hist(states_visited, bins=100)
-plt.show()
+def game_value(observations, result):
+    if result==0:
+        reward = 0
+    elif result==1:
+        reward = 1
+    else:
+        reward=-1
+    value_list = []
+    N=len(observations)
+    for ix in range(N):
+        value_list.append(0.95**(N-ix)*reward)
+    return value_list
+
+q_table = np.zeros(shape=(4**7+3, 7))
+
+epochs=50000
+for n in range(epochs):
+    if n%100==0:
+        print(n)
+    b,s,a,r = game_play()
+    values = game_value(s, r)
+    s.append(4**7+r)
+    
+    for k in range(len(s)-1):
+        next_max = np.max(q_table[s[k+1]])
+        old_value = q_table[s[k]][a[k]]
+        new_value = old_value+0.6*(values[k]+0.6*next_max-old_value)
+        q_table[s[k]][a[k]]=new_value
+
+print(q_table)
+
