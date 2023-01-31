@@ -1,5 +1,6 @@
 import numpy as np
 from numbers import Number
+import matplotlib.pyplot as plt
 
 def game_reset():
     return np.zeros(shape=(7,6), dtype=int)
@@ -53,20 +54,19 @@ def game_update(board, col, player):
             return board
 
 def game_state(board):
-    state = []
-    for k in range(7):
-        for i in range(6):
-            if board[k][i]==0:
-                break
-        if i==5:
-            if board[k][i]==0:
-                state.append((k, 4, board[k][4]))
-            else:
-                state.append((k, 5, board[k][5]))
-        elif i==0:
-            state.append((k, 0, board[k][0]))
+    averages = []
+    state=0
+    for n in range(7):
+        average = sum(board[n])/6
+        if average==0:
+            cat=0
+        elif average<=0.35:
+            cat = 1
+        elif average<=0.85:
+            cat = 2
         else:
-            state.append((k, i-1, board[k][i-1]))
+            cat = 3
+        state+= cat*4**n
     return state
 
 player=2
@@ -79,13 +79,28 @@ while game_won(board)==0:
         player=1
     column = np.random.randint(0,7)
     if game_forfeit(board, column):
-        print("Forfeit")
-        print(board)
-        print(column)
         break
     else:
         board = game_update(board, column, player)
-print(board)
-print(game_state(board))
 
+def game_play():
+    states = []
+    board = game_reset()
+    player=2
+    while game_won(board)==0:
+        states.append(game_state(board))
+        if player==1:
+            player=2
+        else:
+            player=1
+        action = np.random.randint(0,7)
+        if game_forfeit(board,action):
+            break
+        board = game_update(board, action, player)
+    return(board, states)
 
+states_visited=[]
+for i in range(1000):
+    states_visited+=game_play()[1]
+plt.hist(states_visited, bins=100)
+plt.show()
