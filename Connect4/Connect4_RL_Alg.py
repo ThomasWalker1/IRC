@@ -96,7 +96,7 @@ def game_ending(board):
     else:
         return game_won(board)
 
-def game_play():
+def game_play_random():
     states_observed = []
     actions = []
     board = game_reset()
@@ -137,7 +137,7 @@ epochs=50000
 for n in range(epochs):
     if n%100==0:
         print(n)
-    b,s,a,r = game_play()
+    b,s,a,r = game_play_random()
     values = game_value(s, r)
     s.append(4**7+r)
     
@@ -147,5 +147,35 @@ for n in range(epochs):
         new_value = old_value+0.6*(values[k]+0.6*next_max-old_value)
         q_table[s[k]][a[k]]=new_value
 
-print(q_table)
+def game_play_evaluate():
+    board = game_reset()
+    player=2
+    while game_won(board)==0:
+        if player==1:
+            player=2
+            action = np.random.randint(0,7)
+        else:
+            player=1
+            action = np.argmax(q_table[game_state(board)])
+            if q_table[game_state(board)][action]==0:
+                action = np.random.randint(0,7)
+        if game_forfeit(board,action):
+            break
+        board = game_update(board, action, player)
+    return(board, game_ending(board))
 
+drawn=0
+won=0
+lost = 0
+no_games = 2000
+for k in range(no_games):
+    if k%100==0:
+        print(k)
+    b, r = game_play_evaluate()
+    if r==0:
+        drawn+=1
+    elif r==1:
+        won+=1
+    else:
+        lost+=1
+print(f"Played: {no_games}\nWon: {won}\nLost: {lost}\nDrawn: {drawn}")
