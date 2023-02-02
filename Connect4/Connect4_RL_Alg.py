@@ -133,7 +133,7 @@ def game_value(observations, result):
 
 q_table = np.zeros(shape=(4**7+3, 7))
 
-epochs=50000
+epochs=100
 for n in range(epochs):
     if n%100==0:
         print(n)
@@ -179,3 +179,7 @@ for k in range(no_games):
     else:
         lost+=1
 print(f"Played: {no_games}\nWon: {won}\nLost: {lost}\nDrawn: {drawn}")
+
+with open('q_table.txt', 'w') as fp:
+    for state_list in q_table:
+        fp.write(f"[{state_list[0]},{state_list[1]},{state_list[2]},{state_list[3]},{state_list[4]},{state_list[5]},{state_list[6]}]\n")
